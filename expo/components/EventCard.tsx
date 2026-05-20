@@ -7,7 +7,7 @@ import {
   Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Calendar, MapPin, Clock, Star } from 'lucide-react-native';
+import { Calendar, MapPin, Clock, Star, Ban } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { GolfEvent, FALLBACK_IMAGE } from '@/constants/events';
 
@@ -41,13 +41,18 @@ export default React.memo(function EventCard({
   }, [scaleAnim]);
 
   const isSpecial = event.type === 'special';
+  const isCancelled = event.cancelled === true;
 
   return (
     <Animated.View
       style={[styles.cardWrapper, { transform: [{ scale: scaleAnim }] }]}
     >
       <TouchableOpacity
-        style={[styles.card, isSpecial && styles.specialCard]}
+        style={[
+          styles.card,
+          isSpecial && styles.specialCard,
+          isCancelled && styles.cancelledCard,
+        ]}
         onPress={() => onPress(event)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -56,22 +61,35 @@ export default React.memo(function EventCard({
       >
         <Image
           source={{ uri: imageError ? FALLBACK_IMAGE : event.imageUrl }}
-          style={styles.image}
+          style={[styles.image, isCancelled && styles.cancelledImage]}
           contentFit="cover"
           transition={300}
           onError={() => setImageError(true)}
         />
-        <View style={styles.imageOverlay} />
+        <View
+          style={[
+            styles.imageOverlay,
+            isCancelled && styles.cancelledOverlay,
+          ]}
+        />
 
-        {isSpecial && (
+        {isCancelled ? (
+          <View style={styles.cancelledBadge}>
+            <Ban size={12} color={Colors.white} />
+            <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          </View>
+        ) : isSpecial ? (
           <View style={styles.specialBadge}>
             <Star size={12} color={Colors.backgroundDark} fill={Colors.gold} />
             <Text style={styles.specialBadgeText}>Special Event</Text>
           </View>
-        )}
+        ) : null}
 
         <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text
+            style={[styles.title, isCancelled && styles.cancelledTitle]}
+            numberOfLines={2}
+          >
             {event.title}
           </Text>
 
@@ -96,10 +114,23 @@ export default React.memo(function EventCard({
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.spotsText}>{event.spotsInfo}</Text>
-            <View style={styles.bookBtn}>
-              <Text style={styles.bookBtnText}>Book</Text>
-            </View>
+            <Text
+              style={[
+                styles.spotsText,
+                isCancelled && styles.cancelledSpotsText,
+              ]}
+            >
+              {event.spotsInfo}
+            </Text>
+            {isCancelled ? (
+              <View style={styles.cancelledPill}>
+                <Text style={styles.cancelledPillText}>Cancelled</Text>
+              </View>
+            ) : (
+              <View style={styles.bookBtn}>
+                <Text style={styles.bookBtnText}>Book</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -195,5 +226,58 @@ const styles = StyleSheet.create({
     color: Colors.backgroundDark,
     fontSize: 13,
     fontWeight: '700' as const,
+  },
+  cancelledCard: {
+    borderColor: Colors.error,
+    opacity: 0.85,
+  },
+  cancelledImage: {
+    opacity: 0.5,
+  },
+  cancelledOverlay: {
+    backgroundColor: 'rgba(10, 20, 10, 0.55)',
+  },
+  cancelledBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.error,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  cancelledBadgeText: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  cancelledTitle: {
+    textDecorationLine: 'line-through',
+    color: Colors.textSecondary,
+  },
+  cancelledSpotsText: {
+    color: Colors.error,
+    fontStyle: 'normal',
+    fontWeight: '600' as const,
+  },
+  cancelledPill: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  cancelledPillText: {
+    color: Colors.error,
+    fontSize: 12,
+    fontWeight: '700' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

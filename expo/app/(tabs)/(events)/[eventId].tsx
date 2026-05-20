@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Users,
   Star,
+  Ban,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { FALLBACK_IMAGE } from '@/constants/events';
@@ -85,6 +86,7 @@ export default function EventDetailScreen() {
   }
 
   const isSpecial = event.type === 'special';
+  const isCancelled = event.cancelled === true;
 
   return (
     <View style={styles.container}>
@@ -102,7 +104,12 @@ export default function EventDetailScreen() {
             onError={() => setImageError(true)}
           />
           <View style={styles.imageGradient} />
-          {isSpecial && (
+          {isCancelled ? (
+            <View style={styles.cancelledBadge}>
+              <Ban size={14} color={Colors.white} />
+              <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+            </View>
+          ) : isSpecial ? (
             <View style={styles.specialBadge}>
               <Star
                 size={14}
@@ -111,11 +118,29 @@ export default function EventDetailScreen() {
               />
               <Text style={styles.specialBadgeText}>Special Event</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.title}>{event.title}</Text>
+          <Text
+            style={[styles.title, isCancelled && styles.cancelledTitle]}
+          >
+            {event.title}
+          </Text>
+
+          {isCancelled && (
+            <View style={styles.cancelledBanner}>
+              <Ban size={18} color={Colors.error} />
+              <View style={styles.cancelledBannerTextWrap}>
+                <Text style={styles.cancelledBannerTitle}>
+                  This event has been cancelled
+                </Text>
+                <Text style={styles.cancelledBannerSubtitle}>
+                  Please check Bookwhen for the latest information.
+                </Text>
+              </View>
+            </View>
+          )}
 
           <View style={styles.infoCards}>
             <View style={styles.infoCard}>
@@ -165,19 +190,26 @@ export default function EventDetailScreen() {
           <Text style={styles.bookingLocation}>{event.location}</Text>
           <Text style={styles.bookingDate}>{event.date}</Text>
         </View>
-        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-          <TouchableOpacity
-            style={styles.bookButton}
-            onPress={handleBook}
-            onPressIn={handleBtnPressIn}
-            onPressOut={handleBtnPressOut}
-            activeOpacity={1}
-            testID="book-now-button"
-          >
-            <Text style={styles.bookButtonText}>Book Now</Text>
-            <ExternalLink size={16} color={Colors.backgroundDark} />
-          </TouchableOpacity>
-        </Animated.View>
+        {isCancelled ? (
+          <View style={styles.cancelledButton}>
+            <Ban size={16} color={Colors.error} />
+            <Text style={styles.cancelledButtonText}>Cancelled</Text>
+          </View>
+        ) : (
+          <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={handleBook}
+              onPressIn={handleBtnPressIn}
+              onPressOut={handleBtnPressOut}
+              activeOpacity={1}
+              testID="book-now-button"
+            >
+              <Text style={styles.bookButtonText}>Book Now</Text>
+              <ExternalLink size={16} color={Colors.backgroundDark} />
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </View>
     </View>
   );
@@ -325,5 +357,69 @@ const styles = StyleSheet.create({
     color: Colors.backgroundDark,
     fontSize: 15,
     fontWeight: '700' as const,
+  },
+  cancelledBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.error,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  cancelledBadgeText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  cancelledTitle: {
+    textDecorationLine: 'line-through',
+    color: Colors.textSecondary,
+  },
+  cancelledBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(229, 115, 115, 0.12)',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    padding: 14,
+    borderRadius: 12,
+  },
+  cancelledBannerTextWrap: {
+    flex: 1,
+  },
+  cancelledBannerTitle: {
+    color: Colors.error,
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  cancelledBannerSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  cancelledButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 24,
+  },
+  cancelledButtonText: {
+    color: Colors.error,
+    fontSize: 14,
+    fontWeight: '700' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

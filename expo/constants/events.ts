@@ -10,6 +10,7 @@ export interface GolfEvent {
   spotsInfo: string;
   imageUrl: string;
   bookingUrl: string;
+  cancelled?: boolean;
 }
 
 const COURSE_IMAGES = [

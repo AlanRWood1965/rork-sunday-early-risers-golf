@@ -32,6 +32,9 @@ interface BookwhenAttributes {
   all_day?: boolean | null;
   attachments?: { url?: string }[] | null;
   iframe_src?: string | null;
+  tags?: string[] | null;
+  cancelled?: boolean | null;
+  status?: string | null;
 }
 
 interface BookwhenEvent {
@@ -94,6 +97,16 @@ function pickImage(type: 'weekly' | 'special', index: number, title: string): st
   return COURSE_IMAGES[index % COURSE_IMAGES.length];
 }
 
+function isCancelled(a: BookwhenAttributes, title: string): boolean {
+  if (a.cancelled === true) return true;
+  if ((a.status ?? '').toLowerCase() === 'cancelled') return true;
+  const tags = (a.tags ?? []).map((t) => (t ?? '').toLowerCase());
+  if (tags.some((t) => t.includes('cancel'))) return true;
+  const lower = title.toLowerCase();
+  if (lower.includes('cancelled') || lower.includes('canceled')) return true;
+  return false;
+}
+
 function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
   const a = ev.attributes ?? {};
   const startStr = a.start_at;
@@ -101,7 +114,9 @@ function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
   const start = new Date(startStr);
   if (Number.isNaN(start.getTime())) return null;
 
-  const title = (a.title ?? '').trim() || 'SER Event';
+  const rawTitle = (a.title ?? '').trim() || 'SER Event';
+  const cancelled = isCancelled(a, rawTitle);
+  const title = rawTitle.replace(/\s*\(?cancelled\)?\s*/gi, ' ').replace(/\s+/g, ' ').trim() || rawTitle;
   const type = classify(title);
   const allDay = a.all_day === true;
   const location = (a.location ?? a.location_text ?? '').trim() ||
@@ -120,9 +135,14 @@ function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
     location,
     description,
     type,
-    spotsInfo: type === 'special' ? 'Limited places available' : 'Open to all SER members',
+    spotsInfo: cancelled
+      ? 'This event has been cancelled'
+      : type === 'special'
+        ? 'Limited places available'
+        : 'Open to all SER members',
     imageUrl: pickImage(type, index, title),
     bookingUrl: `https://bookwhen.com/${ACCOUNT_SLUG}/e/${ev.id}`,
+    cancelled,
   };
 }
 
