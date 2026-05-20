@@ -35,6 +35,8 @@ interface BookwhenAttributes {
   tags?: string[] | null;
   cancelled?: boolean | null;
   status?: string | null;
+  cancelled_at?: string | null;
+  cancellation_message?: string | null;
 }
 
 interface BookwhenEvent {
@@ -98,6 +100,7 @@ function pickImage(type: 'weekly' | 'special', index: number, title: string): st
 }
 
 function isCancelled(a: BookwhenAttributes, title: string): boolean {
+  if (a.cancelled_at) return true;
   if (a.cancelled === true) return true;
   if ((a.status ?? '').toLowerCase() === 'cancelled') return true;
   const tags = (a.tags ?? []).map((t) => (t ?? '').toLowerCase());
