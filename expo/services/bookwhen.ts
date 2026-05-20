@@ -137,8 +137,8 @@ export async function fetchBookwhenEvents(): Promise<GolfEvent[]> {
   }
 
   const now = new Date();
-  const fromIso = now.toISOString();
-  const url = `${BOOKWHEN_API_URL}?filter[from]=${encodeURIComponent(fromIso)}&page[size]=100`;
+  const from = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
+  const url = `${BOOKWHEN_API_URL}?filter[from]=${from}&page[size]=100`;
 
   const authHeader = `Basic ${typeof btoa !== 'undefined'
     ? btoa(`${apiKey}:`)
