@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
@@ -22,11 +23,12 @@ import {
   Star,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { getEventById, FALLBACK_IMAGE } from '@/constants/events';
+import { FALLBACK_IMAGE } from '@/constants/events';
+import { useEventById } from '@/hooks/useEvents';
 
 export default function EventDetailScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
-  const event = useMemo(() => getEventById(eventId ?? ''), [eventId]);
+  const { data: event, isLoading } = useEventById(eventId);
   const btnScale = useRef(new Animated.Value(1)).current;
   const [imageError, setImageError] = useState(false);
 
@@ -61,6 +63,16 @@ export default function EventDetailScreen() {
       useNativeDriver: true,
     }).start();
   }, [btnScale]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator color={Colors.gold} />
+        </View>
+      </View>
+    );
+  }
 
   if (!event) {
     return (

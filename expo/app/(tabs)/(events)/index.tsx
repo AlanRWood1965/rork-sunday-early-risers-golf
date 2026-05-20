@@ -5,13 +5,16 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
-import { getUpcomingEvents, getSpecialEvents, getWeeklyEvents, GolfEvent } from '@/constants/events';
+import { GolfEvent } from '@/constants/events';
+import { useEvents } from '@/hooks/useEvents';
 import EventCard from '@/components/EventCard';
 
 type FilterType = 'all' | 'weekly' | 'special';
@@ -19,19 +22,24 @@ type FilterType = 'all' | 'weekly' | 'special';
 export default function EventsScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterType>('all');
+  const { data: allEvents, isLoading, isError, error, refetch, isRefetching } = useEvents();
 
   const events = useMemo(() => {
+    const list = allEvents ?? [];
     switch (filter) {
       case 'weekly':
-        return getWeeklyEvents();
+        return list.filter((e) => e.type === 'weekly');
       case 'special':
-        return getSpecialEvents();
+        return list.filter((e) => e.type === 'special');
       default:
-        return getUpcomingEvents();
+        return list;
     }
-  }, [filter]);
+  }, [filter, allEvents]);
 
-  const specialEvents = useMemo(() => getSpecialEvents(), []);
+  const specialEvents = useMemo(
+    () => (allEvents ?? []).filter((e) => e.type === 'special'),
+    [allEvents]
+  );
 
   const handleEventPress = useCallback(
     (event: GolfEvent) => {
@@ -127,16 +135,40 @@ export default function EventsScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={filter === 'all' ? events : events}
+        data={events}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.gold}
+          />
+        }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No events found</Text>
-          </View>
+          isLoading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator color={Colors.gold} />
+              <Text style={styles.emptyText}>Loading events…</Text>
+            </View>
+          ) : isError ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>Couldn't load events</Text>
+              <Text style={styles.emptySubText}>
+                {error?.message ?? 'Please try again later.'}
+              </Text>
+              <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+                <Text style={styles.retryBtnText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No upcoming events</Text>
+            </View>
+          )
         }
       />
     </View>
@@ -239,9 +271,30 @@ const styles = StyleSheet.create({
   empty: {
     alignItems: 'center',
     paddingVertical: 40,
+    gap: 10,
+    paddingHorizontal: 24,
   },
   emptyText: {
     color: Colors.textMuted,
     fontSize: 15,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  retryBtn: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: Colors.gold,
+  },
+  retryBtnText: {
+    color: Colors.backgroundDark,
+    fontSize: 13,
+    fontWeight: '700' as const,
   },
 });
