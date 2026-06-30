@@ -22,7 +22,7 @@ import EventCard from '@/components/EventCard';
 
 type FilterType = 'all' | 'weekly' | 'special';
 
-const CUSTOMER_PORTAL_URL = 'https://bookwhen.com/ser-golf';
+const CUSTOMER_PORTAL_URL = 'https://my.bookwhen.com';
 
 export default function EventsScreen() {
   const router = useRouter();
