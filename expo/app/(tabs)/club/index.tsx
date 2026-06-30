@@ -18,11 +18,13 @@ import {
   History,
   Users,
   Trophy,
+  UserCircle,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
 const CLUB_URL = 'https://www.glasgowgolfclub.com';
 const BOOKING_URL = 'https://bookwhen.com/ser-golf';
+const CUSTOMER_PORTAL_URL = 'https://bookwhen.com/ser-golf';
 
 export default function ClubScreen() {
   const openUrl = useCallback(async (url: string) => {
@@ -112,6 +114,23 @@ export default function ClubScreen() {
 
       <View style={styles.linksSection}>
         <Text style={styles.sectionTitle}>QUICK LINKS</Text>
+
+        <TouchableOpacity
+          style={[styles.linkCard, styles.portalCard]}
+          onPress={() => openUrl(CUSTOMER_PORTAL_URL)}
+          testID="customer-portal-link"
+        >
+          <View style={styles.portalIconWrap}>
+            <UserCircle size={24} color={Colors.gold} />
+          </View>
+          <View style={styles.linkContent}>
+            <Text style={styles.portalTitle}>My Bookings</Text>
+            <Text style={styles.portalSubtitle}>
+              View and manage your bookings via the Bookwhen Customer Portal
+            </Text>
+          </View>
+          <ExternalLink size={18} color={Colors.gold} />
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.linkCard}
@@ -304,5 +323,29 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 11,
     fontStyle: 'italic',
+  },
+  portalCard: {
+    borderColor: Colors.goldDark,
+    borderWidth: 1.5,
+    backgroundColor: '#1a201a',
+  },
+  portalIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.backgroundDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portalTitle: {
+    color: Colors.gold,
+    fontSize: 16,
+    fontWeight: '700' as const,
+  },
+  portalSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 17,
   },
 });

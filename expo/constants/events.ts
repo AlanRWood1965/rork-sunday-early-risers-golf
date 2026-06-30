@@ -11,6 +11,8 @@ export interface GolfEvent {
   imageUrl: string;
   bookingUrl: string;
   cancelled?: boolean;
+  /** True when a previously-cancelled event has been reset and is now open for bookings again. */
+  reset?: boolean;
 }
 
 const COURSE_IMAGES = [

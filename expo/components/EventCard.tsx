@@ -7,7 +7,7 @@ import {
   Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Calendar, MapPin, Clock, Star, Ban } from 'lucide-react-native';
+import { Calendar, MapPin, Clock, Star, Ban, RotateCcw } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { GolfEvent, FALLBACK_IMAGE } from '@/constants/events';
 
@@ -42,6 +42,7 @@ export default React.memo(function EventCard({
 
   const isSpecial = event.type === 'special';
   const isCancelled = event.cancelled === true;
+  const isReset = event.reset === true;
 
   return (
     <Animated.View
@@ -77,6 +78,11 @@ export default React.memo(function EventCard({
           <View style={styles.cancelledBadge}>
             <Ban size={12} color={Colors.white} />
             <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          </View>
+        ) : isReset ? (
+          <View style={styles.resetBadge}>
+            <RotateCcw size={12} color={Colors.backgroundDark} />
+            <Text style={styles.resetBadgeText}>Class Reset</Text>
           </View>
         ) : isSpecial ? (
           <View style={styles.specialBadge}>
@@ -118,6 +124,7 @@ export default React.memo(function EventCard({
               style={[
                 styles.spotsText,
                 isCancelled && styles.cancelledSpotsText,
+                isReset && styles.resetSpotsText,
               ]}
             >
               {event.spotsInfo}
@@ -125,6 +132,10 @@ export default React.memo(function EventCard({
             {isCancelled ? (
               <View style={styles.cancelledPill}>
                 <Text style={styles.cancelledPillText}>Cancelled</Text>
+              </View>
+            ) : isReset ? (
+              <View style={styles.resetPill}>
+                <Text style={styles.resetPillText}>Re-book</Text>
               </View>
             ) : (
               <View style={styles.bookBtn}>
@@ -275,6 +286,42 @@ const styles = StyleSheet.create({
   },
   cancelledPillText: {
     color: Colors.error,
+    fontSize: 12,
+    fontWeight: '700' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  resetBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  resetBadgeText: {
+    color: Colors.backgroundDark,
+    fontSize: 11,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
+  },
+  resetSpotsText: {
+    color: Colors.gold,
+    fontStyle: 'normal',
+    fontWeight: '600' as const,
+  },
+  resetPill: {
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  resetPillText: {
+    color: Colors.backgroundDark,
     fontSize: 12,
     fontWeight: '700' as const,
     textTransform: 'uppercase',

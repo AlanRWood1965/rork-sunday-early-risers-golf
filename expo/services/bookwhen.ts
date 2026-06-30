@@ -110,6 +110,9 @@ function isCancelled(a: BookwhenAttributes, title: string): boolean {
   return false;
 }
 
+/** In-memory cache of event cancelled states to detect resets between fetches. */
+const previousCancelledMap = new Map<string, boolean>();
+
 function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
   const a = ev.attributes ?? {};
   const startStr = a.start_at;
@@ -119,6 +122,14 @@ function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
 
   const rawTitle = (a.title ?? '').trim() || 'SER Event';
   const cancelled = isCancelled(a, rawTitle);
+
+  // Detect reset: previously cancelled but now available again
+  const previousCancelled = previousCancelledMap.get(ev.id);
+  const reset = !cancelled && previousCancelled === true;
+
+  // Update cache with current state
+  previousCancelledMap.set(ev.id, cancelled);
+
   const title = rawTitle.replace(/\s*\(?cancelled\)?\s*/gi, ' ').replace(/\s+/g, ' ').trim() || rawTitle;
   const type = classify(title);
   const allDay = a.all_day === true;
@@ -140,12 +151,15 @@ function mapToGolfEvent(ev: BookwhenEvent, index: number): GolfEvent | null {
     type,
     spotsInfo: cancelled
       ? 'This event has been cancelled'
-      : type === 'special'
-        ? 'Limited places available'
-        : 'Open to all SER members',
+      : reset
+        ? 'This class has been reset — please re-book if you wish to attend'
+        : type === 'special'
+          ? 'Limited places available'
+          : 'Open to all SER members',
     imageUrl: pickImage(type, index, title),
     bookingUrl: `https://bookwhen.com/${ACCOUNT_SLUG}/e/${ev.id}`,
     cancelled,
+    reset,
   };
 }
 

@@ -22,6 +22,7 @@ import {
   Users,
   Star,
   Ban,
+  RotateCcw,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { FALLBACK_IMAGE } from '@/constants/events';
@@ -87,6 +88,7 @@ export default function EventDetailScreen() {
 
   const isSpecial = event.type === 'special';
   const isCancelled = event.cancelled === true;
+  const isReset = event.reset === true;
 
   return (
     <View style={styles.container}>
@@ -108,6 +110,11 @@ export default function EventDetailScreen() {
             <View style={styles.cancelledBadge}>
               <Ban size={14} color={Colors.white} />
               <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+            </View>
+          ) : isReset ? (
+            <View style={styles.resetBadge}>
+              <RotateCcw size={14} color={Colors.backgroundDark} />
+              <Text style={styles.resetBadgeText}>Class Reset</Text>
             </View>
           ) : isSpecial ? (
             <View style={styles.specialBadge}>
@@ -137,6 +144,20 @@ export default function EventDetailScreen() {
                 </Text>
                 <Text style={styles.cancelledBannerSubtitle}>
                   Please check Bookwhen for the latest information.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {isReset && (
+            <View style={styles.resetBanner}>
+              <RotateCcw size={18} color={Colors.gold} />
+              <View style={styles.cancelledBannerTextWrap}>
+                <Text style={styles.resetBannerTitle}>
+                  This class has been reset
+                </Text>
+                <Text style={styles.resetBannerSubtitle}>
+                  This event is now open for bookings again. Please re-book via the Customer Portal if you wish to attend.
                 </Text>
               </View>
             </View>
@@ -194,6 +215,11 @@ export default function EventDetailScreen() {
           <View style={styles.cancelledButton}>
             <Ban size={16} color={Colors.error} />
             <Text style={styles.cancelledButtonText}>Cancelled</Text>
+          </View>
+        ) : isReset ? (
+          <View style={styles.resetButton}>
+            <RotateCcw size={16} color={Colors.gold} />
+            <Text style={styles.resetButtonText}>Re-book Now</Text>
           </View>
         ) : (
           <Animated.View style={{ transform: [{ scale: btnScale }] }}>
@@ -417,6 +443,60 @@ const styles = StyleSheet.create({
   },
   cancelledButtonText: {
     color: Colors.error,
+    fontSize: 14,
+    fontWeight: '700' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  resetBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  resetBadgeText: {
+    color: Colors.backgroundDark,
+    fontSize: 12,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
+  },
+  resetBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(201, 165, 78, 0.12)',
+    borderWidth: 1,
+    borderColor: Colors.goldDark,
+    padding: 14,
+    borderRadius: 12,
+  },
+  resetBannerTitle: {
+    color: Colors.gold,
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  resetBannerSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 24,
+  },
+  resetButtonText: {
+    color: Colors.backgroundDark,
     fontSize: 14,
     fontWeight: '700' as const,
     textTransform: 'uppercase',
