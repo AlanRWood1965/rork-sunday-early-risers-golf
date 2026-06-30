@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { UserCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { GolfEvent } from '@/constants/events';
 import { useEvents } from '@/hooks/useEvents';
@@ -19,10 +22,27 @@ import EventCard from '@/components/EventCard';
 
 type FilterType = 'all' | 'weekly' | 'special';
 
+const CUSTOMER_PORTAL_URL = 'https://bookwhen.com/ser-golf';
+
 export default function EventsScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterType>('all');
   const { data: allEvents, isLoading, isError, error, refetch, isRefetching } = useEvents();
+
+  const openCustomerPortal = useCallback(async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      if (Platform.OS === 'web') {
+        Linking.openURL(CUSTOMER_PORTAL_URL);
+      } else {
+        await WebBrowser.openBrowserAsync(CUSTOMER_PORTAL_URL);
+      }
+    } catch {
+      Linking.openURL(CUSTOMER_PORTAL_URL);
+    }
+  }, []);
 
   const events = useMemo(() => {
     const list = allEvents ?? [];
@@ -82,6 +102,16 @@ export default function EventsScreen() {
             <Text style={styles.heroTitle}>Glasgow Golf Club</Text>
             <Text style={styles.heroLocation}>Killermont</Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.myBookingsBtn}
+            onPress={openCustomerPortal}
+            activeOpacity={0.8}
+            testID="customer-portal-link"
+          >
+            <UserCircle size={16} color={Colors.gold} />
+            <Text style={styles.myBookingsBtnText}>My Bookings</Text>
+          </TouchableOpacity>
         </View>
 
         {specialEvents.length > 0 && (
@@ -227,6 +257,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
     letterSpacing: 0.5,
+  },
+  myBookingsBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(10, 20, 10, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.goldDark,
+  },
+  myBookingsBtnText: {
+    color: Colors.gold,
+    fontSize: 12,
+    fontWeight: '600' as const,
   },
   featuredSection: {
     marginTop: 20,
