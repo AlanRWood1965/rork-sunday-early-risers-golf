@@ -5,11 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Calendar, MapPin, Clock, Star, Ban, RotateCcw } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { Calendar, MapPin, Clock, Star, Ban, RotateCcw, CheckCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { GolfEvent, FALLBACK_IMAGE } from '@/constants/events';
+import { useBookedEvents } from '@/hooks/useBookedEvents';
 
 interface EventCardProps {
   event: GolfEvent;
@@ -40,9 +43,11 @@ export default React.memo(function EventCard({
     }).start();
   }, [scaleAnim]);
 
+  const { isBooked, removeBooked } = useBookedEvents();
   const isSpecial = event.type === 'special';
   const isCancelled = event.cancelled === true;
   const isReset = event.reset === true;
+  const booked = isBooked(event.id);
 
   return (
     <Animated.View
@@ -137,6 +142,22 @@ export default React.memo(function EventCard({
               <View style={styles.resetPill}>
                 <Text style={styles.resetPillText}>Re-book</Text>
               </View>
+            ) : booked ? (
+              <TouchableOpacity
+                onLongPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  }
+                  removeBooked(event.id);
+                }}
+                delayLongPress={400}
+                activeOpacity={0.8}
+              >
+                <View style={styles.bookedPill}>
+                  <CheckCircle size={13} color={Colors.white} />
+                  <Text style={styles.bookedPillText}>Booked</Text>
+                </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.bookBtn}>
                 <Text style={styles.bookBtnText}>Book</Text>
@@ -322,6 +343,22 @@ const styles = StyleSheet.create({
   },
   resetPillText: {
     color: Colors.backgroundDark,
+    fontSize: 12,
+    fontWeight: '700' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  bookedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.success,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  bookedPillText: {
+    color: Colors.white,
     fontSize: 12,
     fontWeight: '700' as const,
     textTransform: 'uppercase',

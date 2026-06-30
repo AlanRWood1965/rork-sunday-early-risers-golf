@@ -27,18 +27,22 @@ import {
 import Colors from '@/constants/colors';
 import { FALLBACK_IMAGE } from '@/constants/events';
 import { useEventById } from '@/hooks/useEvents';
+import { useBookedEvents } from '@/hooks/useBookedEvents';
 
 export default function EventDetailScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const { data: event, isLoading } = useEventById(eventId);
+  const { addBooked, removeBooked, isBooked } = useBookedEvents();
   const btnScale = useRef(new Animated.Value(1)).current;
   const [imageError, setImageError] = useState(false);
+  const booked = eventId ? isBooked(eventId) : false;
 
   const handleBook = useCallback(async () => {
     if (!event) return;
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    addBooked(event.id);
     try {
       if (Platform.OS === 'web') {
         Linking.openURL(event.bookingUrl);
@@ -49,7 +53,7 @@ export default function EventDetailScreen() {
       console.log('Error opening booking URL:', err);
       Linking.openURL(event.bookingUrl);
     }
-  }, [event]);
+  }, [event, addBooked]);
 
   const handleBtnPressIn = useCallback(() => {
     Animated.spring(btnScale, {
@@ -221,6 +225,20 @@ export default function EventDetailScreen() {
             <RotateCcw size={16} color={Colors.gold} />
             <Text style={styles.resetButtonText}>Re-book Now</Text>
           </View>
+        ) : booked ? (
+          <TouchableOpacity
+            style={styles.bookedButton}
+            onLongPress={() => {
+              if (Platform.OS !== 'web') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              }
+              removeBooked(event.id);
+            }}
+            delayLongPress={400}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.bookedButtonText}>Booked</Text>
+          </TouchableOpacity>
         ) : (
           <Animated.View style={{ transform: [{ scale: btnScale }] }}>
             <TouchableOpacity
@@ -501,5 +519,16 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  bookedButton: {
+    backgroundColor: Colors.success,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  bookedButtonText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '700' as const,
   },
 });

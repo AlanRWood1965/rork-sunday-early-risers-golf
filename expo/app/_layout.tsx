@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import Colors from '@/constants/colors';
+import { BookedEventsProvider } from '@/hooks/useBookedEvents';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,10 +33,12 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView>
-        <StatusBar style="light" />
-        <RootLayoutNav />
-      </GestureHandlerRootView>
+      <BookedEventsProvider>
+        <GestureHandlerRootView>
+          <StatusBar style="light" />
+          <RootLayoutNav />
+        </GestureHandlerRootView>
+      </BookedEventsProvider>
     </QueryClientProvider>
   );
 }
