@@ -157,6 +157,7 @@ export default React.memo(function EventCard({
                   <CheckCircle size={13} color={Colors.white} />
                   <Text style={styles.bookedPillText}>Booked</Text>
                 </View>
+                <Text style={styles.resetHint}>Long press to reset</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.bookBtn}>
@@ -363,5 +364,11 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  resetHint: {
+    color: Colors.textMuted,
+    fontSize: 9,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });

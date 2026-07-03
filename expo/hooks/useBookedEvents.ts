@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 
@@ -7,27 +8,46 @@ const STORAGE_KEY = 'ser_booked_events';
 export const [BookedEventsProvider, useBookedEvents] = createContextHook(() => {
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
   const [ready, setReady] = useState(false);
+  const loadedRef = useRef(false);
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => {
-        if (stored) {
-          try {
-            const parsed: string[] = JSON.parse(stored);
-            if (Array.isArray(parsed)) {
-              setBookedIds(new Set(parsed));
-            }
-          } catch {
-            // ignore corrupt data
-          }
+  const loadFromStorage = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed: unknown = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setBookedIds(new Set(parsed.filter((v): v is string => typeof v === 'string')));
         }
-      })
-      .catch(() => {})
-      .finally(() => setReady(true));
+      }
+    } catch {
+      // ignore corrupt data
+    } finally {
+      loadedRef.current = true;
+      setReady(true);
+    }
   }, []);
 
-  const persist = useCallback((ids: Set<string>) => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...ids])).catch(() => {});
+  // Load persisted booked IDs on mount
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  // Reload from storage when app returns to foreground (covers cold-start + restore)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && loadedRef.current) {
+        loadFromStorage();
+      }
+    });
+    return () => sub.remove();
+  }, [loadFromStorage]);
+
+  const persist = useCallback(async (ids: Set<string>) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+    } catch {
+      // ignore storage errors
+    }
   }, []);
 
   const addBooked = useCallback(

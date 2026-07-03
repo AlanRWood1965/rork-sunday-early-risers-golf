@@ -227,7 +227,6 @@ export default function EventDetailScreen() {
           </View>
         ) : booked ? (
           <TouchableOpacity
-            style={styles.bookedButton}
             onLongPress={() => {
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -237,7 +236,10 @@ export default function EventDetailScreen() {
             delayLongPress={400}
             activeOpacity={0.8}
           >
-            <Text style={styles.bookedButtonText}>Booked</Text>
+            <View style={styles.bookedButton}>
+              <Text style={styles.bookedButtonText}>Booked</Text>
+            </View>
+            <Text style={styles.resetHintText}>Long press to reset</Text>
           </TouchableOpacity>
         ) : (
           <Animated.View style={{ transform: [{ scale: btnScale }] }}>
@@ -530,5 +532,11 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 15,
     fontWeight: '700' as const,
+  },
+  resetHintText: {
+    color: Colors.textMuted,
+    fontSize: 9,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
