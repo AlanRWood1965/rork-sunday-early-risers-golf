@@ -1,9 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Read .env file for environment variables
+val envFile = rootProject.file(".env")
+val envProps = Properties()
+if (envFile.exists()) {
+    envProps.load(envFile.inputStream())
+}
+
+fun envOrEmpty(key: String): String =
+    envProps.getProperty(key) ?: System.getenv(key) ?: ""
 
 android {
     namespace = "com.rork.sergolfandroid"
@@ -15,6 +27,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "BOOKWHEN_API_KEY", "\"${envOrEmpty("EXPO_PUBLIC_BOOKWHEN_API_KEY")}\"")
     }
 
     signingConfigs {
@@ -46,6 +60,7 @@ android {
         compose = true
         buildConfig = true
     }
+
 }
 
 kotlin {

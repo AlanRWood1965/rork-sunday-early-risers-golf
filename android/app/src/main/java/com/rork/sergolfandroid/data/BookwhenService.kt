@@ -1,7 +1,7 @@
 package com.rork.sergolfandroid.data
 
 import android.util.Base64
-import com.rork.sergolfandroid.Config
+import com.rork.sergolfandroid.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -86,8 +86,8 @@ class BookwhenService {
     }
 
     suspend fun fetchEvents(): List<GolfEvent> {
-        val apiKey = Config.allValues["EXPO_PUBLIC_BOOKWHEN_API_KEY"]
-            ?: throw IllegalStateException("Missing Bookwhen API key")
+        val apiKey = BuildConfig.BOOKWHEN_API_KEY
+        if (apiKey.isBlank()) throw IllegalStateException("Missing Bookwhen API key")
 
         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
         val from = String.format(
