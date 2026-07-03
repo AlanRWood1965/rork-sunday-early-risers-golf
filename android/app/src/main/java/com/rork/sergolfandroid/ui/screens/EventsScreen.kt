@@ -3,6 +3,7 @@ package com.rork.sergolfandroid.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,12 +40,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.rork.sergolfandroid.data.EventType
 import com.rork.sergolfandroid.data.GolfEvent
 import com.rork.sergolfandroid.ui.EventsViewModel
 import com.rork.sergolfandroid.ui.theme.AppColors
+
+private const val CUSTOMER_PORTAL_URL = "https://my.bookwhen.com"
 
 private enum class FilterType { ALL, WEEKLY, SPECIAL }
 
@@ -106,6 +112,7 @@ fun EventsScreen(
 
 @Composable
 private fun HeroHeader() {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
         AsyncImage(
             model = "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=1200&q=80",
@@ -114,6 +121,28 @@ private fun HeroHeader() {
             modifier = Modifier.fillMaxSize(),
         )
         Box(modifier = Modifier.fillMaxSize().background(Color(0x8C0A140A)))
+
+        // My Bookings pill — top-right, opens Bookwhen Customer Portal
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xD90A140A))
+                .border(1.dp, AppColors.GoldDark, RoundedCornerShape(20.dp))
+                .clickable {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, CUSTOMER_PORTAL_URL.toUri()),
+                    )
+                }
+                .padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Filled.AccountCircle, "My Bookings", tint = AppColors.Gold, modifier = Modifier.size(16.dp))
+            Text("My Bookings", color = AppColors.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)

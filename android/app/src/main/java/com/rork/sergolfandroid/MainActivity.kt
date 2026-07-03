@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.rork.sergolfandroid.data.BookedEventsManager
 import com.rork.sergolfandroid.ui.navigation.AppNavigation
 import com.rork.sergolfandroid.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        BookedEventsManager.init(this)
         enableEdgeToEdge()
         setContent {
             AppTheme {

@@ -1,8 +1,11 @@
 package com.rork.sergolfandroid.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,30 +15,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import coil3.compose.AsyncImage
+import com.rork.sergolfandroid.data.BookedEventsManager
 import com.rork.sergolfandroid.data.EventType
 import com.rork.sergolfandroid.data.FALLBACK_IMAGE
 import com.rork.sergolfandroid.data.GolfEvent
@@ -47,8 +54,11 @@ fun EventCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val isSpecial = event.type == EventType.SPECIAL
     val isCancelled = event.cancelled
+    val booked = BookedEventsManager.isBooked(event.id)
+    val interactionSource = remember { MutableInteractionSource() }
 
     Column(
         modifier = modifier
@@ -143,6 +153,43 @@ fun EventCard(
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                     ) {
                         Text("CANCELLED", color = AppColors.Error, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else if (booked) {
+                    // Green "Booked" pill with long-press to reset
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(AppColors.Success)
+                                .combinedClickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = {
+                                        // Open the booking page in browser
+                                        context.startActivity(
+                                            Intent(Intent.ACTION_VIEW, event.bookingUrl.toUri()),
+                                        )
+                                    },
+                                    onLongClick = {
+                                        // Reset booked state
+                                        BookedEventsManager.removeBooked(event.id)
+                                    },
+                                )
+                                .padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Icon(Icons.Filled.CheckCircle, null, tint = AppColors.White, modifier = Modifier.size(13.dp))
+                            Text("BOOKED", color = AppColors.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                        }
+                        Text(
+                            "Long press to reset",
+                            color = AppColors.TextMuted,
+                            fontSize = 9.sp,
+                            modifier = Modifier.padding(top = 3.dp, end = 2.dp),
+                        )
                     }
                 } else {
                     Box(

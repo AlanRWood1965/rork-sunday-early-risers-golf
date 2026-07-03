@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
@@ -110,6 +111,11 @@ fun ClubScreen(modifier: Modifier = Modifier) {
                 Icons.Filled.LocationOn,
                 "Killermont Course",
                 "Set in the beautiful surroundings of Bearsden, the Glasgow Golf Club Killermont course offers a challenging yet enjoyable parkland experience and a stunning clubhouse.",
+            )
+            InfoCard(
+                Icons.Filled.Group,
+                "SER Community",
+                "Our group organises weekly Sunday morning breakfast, friendly matches and special outings throughout the year.",
             )
         }
 

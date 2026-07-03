@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
@@ -31,6 +33,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
+import com.rork.sergolfandroid.data.BookedEventsManager
 import com.rork.sergolfandroid.data.EventType
 import com.rork.sergolfandroid.data.GolfEvent
 import com.rork.sergolfandroid.ui.theme.AppColors
@@ -65,6 +72,8 @@ fun EventDetailScreen(
 
     val isSpecial = event.type == EventType.SPECIAL
     val isCancelled = event.cancelled
+    var booked by remember { mutableStateOf(BookedEventsManager.isBooked(event.id)) }
+    val bookedInteractionSource = remember { MutableInteractionSource() }
 
     Box(modifier = modifier.fillMaxSize().background(AppColors.BackgroundDark)) {
         Column(
@@ -145,51 +154,92 @@ fun EventDetailScreen(
                     Text(event.description, color = AppColors.TextSecondary, fontSize = 15.sp, lineHeight = 23.sp)
                 }
 
-                Spacer(Modifier.height(80.dp))
+                Spacer(Modifier.height(100.dp))
             }
         }
 
-        Row(
+        // Bottom booking bar
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .background(AppColors.DarkGreen)
                 .border(1.dp, AppColors.CardBorder)
                 .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 30.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(event.location, color = AppColors.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                Text(event.date, color = AppColors.TextMuted, fontSize = 13.sp)
-            }
-            if (isCancelled) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(24.dp))
-                        .border(1.dp, AppColors.Error, RoundedCornerShape(24.dp))
-                        .padding(horizontal = 20.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(Icons.Filled.Block, null, tint = AppColors.Error, modifier = Modifier.size(16.dp))
-                    Text("CANCELLED", color = AppColors.Error, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(event.location, color = AppColors.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(event.date, color = AppColors.TextMuted, fontSize = 13.sp)
                 }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(AppColors.Gold)
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, event.bookingUrl.toUri())
-                            context.startActivity(intent)
+                if (isCancelled) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(24.dp))
+                            .border(1.dp, AppColors.Error, RoundedCornerShape(24.dp))
+                            .padding(horizontal = 20.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(Icons.Filled.Block, null, tint = AppColors.Error, modifier = Modifier.size(16.dp))
+                        Text("CANCELLED", color = AppColors.Error, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else if (booked) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(AppColors.Success)
+                                .combinedClickable(
+                                    interactionSource = bookedInteractionSource,
+                                    indication = null,
+                                    onClick = {
+                                        context.startActivity(
+                                            Intent(Intent.ACTION_VIEW, event.bookingUrl.toUri()),
+                                        )
+                                    },
+                                    onLongClick = {
+                                        BookedEventsManager.removeBooked(event.id)
+                                        booked = false
+                                    },
+                                )
+                                .padding(horizontal = 24.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(Icons.Filled.CheckCircle, null, tint = AppColors.White, modifier = Modifier.size(16.dp))
+                            Text("Booked", color = AppColors.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
-                        .padding(horizontal = 24.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text("Book Now", color = AppColors.BackgroundDark, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = AppColors.BackgroundDark, modifier = Modifier.size(16.dp))
+                        Text(
+                            "Long press to reset",
+                            color = AppColors.TextMuted,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(top = 4.dp, end = 2.dp),
+                        )
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(AppColors.Gold)
+                            .clickable {
+                                BookedEventsManager.addBooked(event.id)
+                                booked = true
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, event.bookingUrl.toUri()),
+                                )
+                            }
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("Book Now", color = AppColors.BackgroundDark, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = AppColors.BackgroundDark, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }
